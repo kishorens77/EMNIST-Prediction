@@ -56,7 +56,7 @@ transform = transforms.Compose([
 # Streamlit app
 st.title("EMNIST Character Recognition App")
 
-uploaded_file = st.file_uploader("Choose an image...", type="jpg")
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     # Read the uploaded image
