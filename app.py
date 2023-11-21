@@ -89,4 +89,4 @@ def success():
         return render_template("webpage.html", message=f"Model Prediction: {class_mapping[predicted.item()]}")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=False)
