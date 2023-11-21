@@ -42,7 +42,7 @@ class CNN(nn.Module):
         return output, x
 
 model = CNN()
-weights_path = r"C:\Users\Kishore\Box\Fall 2023\Intro to ML\Bonus\Model Deployment\cnn_model_weights.pth"
+weights_path = "cnn_model_weights.pth"
 
 model.load_state_dict(torch.load(weights_path))
 model.eval()
