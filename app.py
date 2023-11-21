@@ -1,11 +1,9 @@
-from flask import Flask, render_template, request
+import streamlit as st
 from PIL import Image
 import torch
 from torchvision import transforms
 import io
 import torch.nn as nn
-
-app = Flask(__name__)
 
 class CNN(nn.Module):
     def __init__(self):
@@ -41,12 +39,13 @@ class CNN(nn.Module):
 
         return output, x
 
+# Load the model and set it to evaluation mode
 model = CNN()
-weights_path = "cnn_model_weights.pth"
-
+weights_path = "cnn_model_weights.pth"  # Update with the correct path
 model.load_state_dict(torch.load(weights_path))
 model.eval()
 
+# Transformation for input images
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
     transforms.Resize((28, 28)),
@@ -54,39 +53,27 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.1758], std=[0.333])
 ])
 
-@app.route('/')
-def upload():
-    return render_template("webpage.html")
+# Streamlit app
+st.title("EMNIST Character Recognition App")
 
-@app.route('/success', methods=['POST'])
-def success():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return render_template("webpage.html", message='No file part')
+uploaded_file = st.file_uploader("Choose an image...", type="jpg")
 
-        f = request.files['file']
+if uploaded_file is not None:
+    # Read the uploaded image
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image.", use_column_width=True)
 
-        if f.filename == '':
-            return render_template("webpage.html", message='No selected file')
+    # Transform the image and make a prediction
+    image_tensor = transform(image).unsqueeze(0)
+    with torch.no_grad():
+        output, _ = model(image_tensor)
+        _, predicted = torch.max(output.data, 1)
 
-        #Reading the uploaded image
-        image_stream = f.read()
-        image = Image.open(io.BytesIO(image_stream))
-        image_tensor = transform(image).unsqueeze(0)
-
-        # Predicting the output from the input image
-        with torch.no_grad():
-            output,_ = model(image_tensor)
-            _, predicted = torch.max(output.data, 1)
-
-        class_mapping = {
+    class_mapping = {
         0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
         10: 'A', 11: 'B', 12: 'C', 13: 'D', 14: 'E', 15: 'F', 16: 'G', 17: 'H', 18: 'I', 19: 'J',
         20: 'K', 21: 'L', 22: 'M', 23: 'N', 24: 'O', 25: 'P', 26: 'Q', 27: 'R', 28: 'S', 29: 'T',
         30: 'U', 31: 'V', 32: 'W', 33: 'X', 34: 'Y', 35: 'Z'
-        }       
+    }
 
-        return render_template("webpage.html", message=f"Model Prediction: {class_mapping[predicted.item()]}")
-
-if __name__ == '__main__':
-    app.run()
+    st.write(f"Model Prediction: {class_mapping[predicted.item()]}")
